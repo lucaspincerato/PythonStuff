@@ -21,7 +21,7 @@ def get_rex_client_list():
     username = 'lpincerato'
     password = 'C3f2dUjVWdSk5reQ'
     database = 'ScoobyDB'
-    query = "select client_key from \"Client\" c where c.group_id = 15"
+    query = "select client_key from \"Client\" c where c.group_id = 16"
 
     connection = psycopg2.connect(host=hostname, user=username, password=password, dbname=database)
     cur = connection.cursor()
