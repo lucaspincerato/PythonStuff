@@ -1,5 +1,7 @@
 import psycopg2
 import datetime
+import csv
+
 
 ClearSaleConversionDict = {
     'REX-CLIENT-5a380953a39d5502235fc966': 0.89,
@@ -80,7 +82,7 @@ ClearSaleConversionDict = {
     'REX-CLIENT-5a3908d1b9883270baae0f0a': 0.32,
     'REX-CLIENT-5a3908e83ef0086d56909c16': 0.45,
     'REX-CLIENT-5a3909203fa3796d43cb0b71': 0.82,
-    'REX-CLIENT-5a3909aa64635f6b55d2ad52': 0.81,
+    'REX-CLIENT-5a3909aa64635f6b55d2ad52': 0.81
 }
 
 
@@ -95,9 +97,10 @@ def QueryGroup(GroupId):
     cur = connection.cursor()
     cur.execute(query)
     clientlist = cur.fetchall()
+    clist = [i[0] for i in clientlist]
     connection.close()
 
-    return clientlist
+    return clist
 
 
 
@@ -125,9 +128,9 @@ def CalculateConversion(Threshhold, TransactionList):
     total = len(TransactionList)
     approved = sum(1 for transaction in TransactionList if float(transaction['source']['antifraud_status']['score']) <= Threshhold/100)
 
-    print(f"\n\nThreshhold é {Threshhold}")
-    print(f"total é {total}")
-    print(f"approved é {approved}")
+    # print(f"\n\nThreshhold é {Threshhold}")
+    # print(f"total é {total}")
+    # print(f"approved é {approved}")
 
     try:
         conv = approved/total
@@ -150,6 +153,10 @@ def BestScore(RexClient):
     # print(f"clearSale Score é {ClearSaleConversionDict.get(RexClient)}")
 
     try:
+        # #debug
+        # print(f"O client é {RexClient}")
+        # print(ClearSaleConversionDict.get(RexClient))
+
         clearSaleConversion = ClearSaleConversionDict.get(RexClient)
     except KeyError:
         print(f"A loja de chave {RexClient} não existe no dicionário de scores de referência!")
@@ -157,24 +164,47 @@ def BestScore(RexClient):
 
     for x in range(100):
         conv = CalculateConversion(x, transactions)
-        if conv >= clearSaleConversion:
-            return x, len(transactions)
 
-    return 0
+
+        # #debug
+        # print(conv, '  -  ', clearSaleConversion)
+
+
+        if conv >= clearSaleConversion:
+            return (x, len(transactions))
+
+    return (0,0)
 
 
 
 def main():
 
-    BestScoreTupleList = []
+    BestScoreTupleList = list()
 
     clientList = QueryGroup(15)
     for client in clientList:
-        bestscore = BestScore(client[0])
-        BestScoreTupleList.append([client, bestscore[0], [1]])
-        print(f"O Score do cliente {client} é {bestscore[0]} com {bestscore[1]} transações")
+        if  ClearSaleConversionDict.get(client) != None:
+            print(f"\n\nComeçando ocálculo de score do cliente {client}")
+            bestscore = BestScore(client)
+
+            # #Debug
+            # print(f"O bestscore é {bestscore}")
+            # print(f"O client é {client}")
+            # print(f"O tuple 1 é {bestscore[0]}")
+            # print(f"O tuple 2 é {bestscore[1]}")
+            # print([client, bestscore0], bestscore[1]])
+
+            BestScoreTupleList.append([client, bestscore[0], bestscore[1]])
+            print(f"O Score do cliente {client} é {bestscore[0]} com {bestscore[1]} transações")
 
     print("Acabei, segue abaixo lista de scores: \n\n", BestScoreTupleList)
+
+    with open('ur file.csv', 'wb') as out:
+        csv_out = csv.writer(out)
+        csv_out.writerow(['Client', 'BestScore', 'TransactionsCount'])
+        for tup in BestScoreTupleList:
+            csv_out.writerow(tup)
+
 
     return
 
@@ -186,5 +216,6 @@ def main():
 
 
 ################# ENTRY POINT ##################
+print("Versão 1")
 main()
 ################################################
