@@ -199,7 +199,9 @@ def main():
 
     print("Acabei, segue abaixo lista de scores: \n\n", BestScoreTupleList)
 
-    with open('ur file.csv', 'wb') as out:
+    csv_path = "C:/Users/lpincerato/Desktop/KondutoScoreOptimizationResult.csv"
+
+    with open(csv_path, 'w') as out:
         csv_out = csv.writer(out)
         csv_out.writerow(['Client', 'BestScore', 'TransactionsCount'])
         for tup in BestScoreTupleList:
@@ -216,6 +218,6 @@ def main():
 
 
 ################# ENTRY POINT ##################
-print("Versão 1")
+print("Iniciando (Versão 2)")
 main()
 ################################################
